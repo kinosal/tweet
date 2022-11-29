@@ -1,6 +1,6 @@
 # Tweet Generation with OpenAI GPT-3
 
-Live version of this app at [tweet.streamlit.app](https://tweet.streamlit.app)
+Live version of this app at [tweets.streamlit.app](https://tweets.streamlit.app)
 
 ## Description
 
