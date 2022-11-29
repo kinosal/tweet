@@ -19,6 +19,8 @@ access_secret = (
 
 
 class Tweets:
+    """Twitter connector."""
+
     def __init__(self, account):
         auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
         auth.set_access_token(access_key, access_secret)

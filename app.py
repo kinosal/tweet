@@ -1,4 +1,4 @@
-"""Streamlit app to summarize text, e.g. blog articles"""
+"""Streamlit app to generate Tweets."""
 
 # Import from 3rd party libraries
 import streamlit as st
@@ -7,7 +7,6 @@ import streamlit.components.v1 as components
 # Import modules
 import tweets as twe
 import oai
-
 
 # Render streamlit page
 st.set_page_config(page_title="Tweet", page_icon="🤖")
