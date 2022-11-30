@@ -47,8 +47,15 @@ if topic:
         tweet = openai.complete(prompt).strip().replace('"', "")
         logging.info(f"Topic: {topic}{mood_output}{style_output}\nTweet: {tweet}")
         st.text_area(label="Tweet", value=tweet, height=100)
-        components.html(
-            f"""
-                <a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-size="large" data-text="{tweet}\n - Tweet generated via" data-url="https://tweets.streamlit.app" data-show-count="false">Tweet</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-            """
-        )
+        col1, col2 = st.columns([5, 1])
+        with col1:
+            components.html(
+                f"""
+                    <a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-size="large" data-text="{tweet}\n - Tweet generated via" data-url="https://tweets.streamlit.app" data-show-count="false">Tweet</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+                """,
+                height=45,
+            )
+        with col2:
+            def regenerate():
+                tweet = openai.complete(prompt).strip().replace('"', "")
+            st.button("Regenerate", type="secondary", on_click=regenerate)
