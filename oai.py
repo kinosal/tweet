@@ -25,8 +25,13 @@ class Openai:
             prompt: text prompt
         Return: boolean if flagged
         """
-        response = openai.Moderation.create(prompt)
-        return response["results"][0]["flagged"]
+        try:
+            response = openai.Moderation.create(prompt)
+            return response["results"][0]["flagged"]
+
+        except Exception as e:
+            st.error(f"OpenAI API error: {e}")
+            return ""
 
     @staticmethod
     def complete(prompt: str) -> str:
@@ -44,5 +49,10 @@ class Openai:
             "frequency_penalty": 0,
             "presence_penalty": 0,
         }
-        response = openai.Completion.create(**kwargs)
-        return response["choices"][0]["text"]
+        try:
+            response = openai.Completion.create(**kwargs)
+            return response["choices"][0]["text"]
+
+        except Exception as e:
+            st.error(f"OpenAI API error: {e}")
+            return ""

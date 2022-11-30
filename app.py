@@ -13,49 +13,86 @@ import streamlit.components.v1 as components
 import tweets as twe
 import oai
 
-# Render streamlit page
-st.set_page_config(page_title="Tweet", page_icon="🤖")
 
-st.title("Generate Tweets")
-st.write("This mini-app generates Tweets using OpenAI's GPT-3 based Davinci model.")
-st.markdown("You can find the code on [GitHub](https://github.com/kinosal/tweet).")
+# Define functions
+def generate(topic, mood="", style=""):
+    """Generate Tweets."""
 
-topic = st.text_input(label="Topic")
-mood = st.text_input(label="Mood (e.g. inspirational, funny, serious) (optional)")
-mood_prompt = f"{mood} " if mood else ""
-style = st.text_input(label="Twitter account to style-copy recent Tweets (optional)")
-if style:
-    twitter = twe.Tweets(account=style)
-    tweets = twitter.fetch_tweets()
-    tweets_prompt = "\n\n".join(tweets)
-    prompt = (
-        f"Write a {mood_prompt}Tweet about {topic} in less than 120 characters "
-        f"and in the style of the following Tweets:\n\n{tweets_prompt}\n"
-    )
-else:
-    prompt = f"Write a {mood_prompt}Tweet about {topic} in less than 120 characters:\n"
+    if not topic:
+        st.session_state.generate_error = "Please enter a topic"
+        return
 
-if topic:
+    mood_prompt = f"{mood} " if mood else ""
+    if style:
+        twitter = twe.Tweets(account=style)
+        tweets = twitter.fetch_tweets()
+        tweets_prompt = "\n\n".join(tweets)
+        prompt = (
+            f"Write a {mood_prompt}Tweet about {topic} in less than 120 characters "
+            f"and in the style of the following Tweets:\n\n{tweets_prompt}\n"
+        )
+    else:
+        prompt = f"Write a {mood_prompt}Tweet about {topic} in less than 120 characters:\n"
+
     openai = oai.Openai()
     flagged = openai.moderate(prompt)
     mood_output = f", Mood: {mood}" if mood else ""
     style_output = f", Style: {style}" if style else ""
     if flagged:
         logging.info(f"Topic: {topic}{mood_output}{style_output}\nflaggged")
-        st.error("Inappropriate input.")
+        st.session_state.generate_error = "Inappropriate input"
+        return
+
     else:
-        tweet = openai.complete(prompt).strip().replace('"', "")
-        logging.info(f"Topic: {topic}{mood_output}{style_output}\nTweet: {tweet}")
-        st.text_area(label="Tweet", value=tweet, height=100)
-        col1, col2 = st.columns([5, 1])
-        with col1:
-            components.html(
-                f"""
-                    <a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-size="large" data-text="{tweet}\n - Tweet generated via" data-url="https://tweets.streamlit.app" data-show-count="false">Tweet</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-                """,
-                height=45,
-            )
-        with col2:
-            def regenerate():
-                tweet = openai.complete(prompt).strip().replace('"', "")
-            st.button("Regenerate", type="secondary", on_click=regenerate)
+        st.session_state.tweet = openai.complete(prompt).strip().replace('"', "")
+        logging.info(
+            f"Topic: {topic}{mood_output}{style_output}\n"
+            f"Tweet: {st.session_state.tweet}"
+        )
+
+
+# Render Streamlit page
+st.set_page_config(page_title="Tweet", page_icon="🤖")
+if "tweet" not in st.session_state:
+    st.session_state.tweet = ""
+if "generate_error" not in st.session_state:
+    st.session_state.generate_error = ""
+
+st.title("Generate Tweets")
+st.write("This mini-app generates Tweets using OpenAI's GPT-3 based Davinci model.")
+st.markdown("You can find the code on [GitHub](https://github.com/kinosal/tweet).")
+topic = st.text_input(label="Topic", placeholder="AI")
+mood = st.text_input(
+    label="Mood (e.g. inspirational, funny, serious) (optional)",
+    placeholder="inspirational",
+)
+style = st.text_input(
+    label="Twitter account handle to style-copy recent Tweets (optional)",
+    placeholder="elonmusk",
+)
+st.button(
+    label="Generate",
+    type="primary",
+    on_click=generate,
+    args=(topic, mood, style),
+)
+if st.session_state.tweet:
+    st.markdown("""---""")
+    st.text_area(label="Tweet", value=st.session_state.tweet, height=100)
+    col1, col2 = st.columns([5, 1])
+    with col1:
+        components.html(
+            f"""
+                <a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-size="large" data-text="{st.session_state.tweet}\n - Tweet generated via" data-url="https://tweets.streamlit.app" data-show-count="false">Tweet</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+            """,
+            height=45,
+        )
+    with col2:
+        st.button(
+            label="Regenerate",
+            type="secondary",
+            on_click=generate,
+            args=(topic, mood, style),
+        )
+elif st.session_state.generate_error:
+    st.error(st.session_state.generate_error)
