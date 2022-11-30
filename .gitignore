@@ -3,5 +3,3 @@
 __pycache__
 .DS_Store
 .vscode
-*.csv
-*.txt

@@ -2,6 +2,7 @@
 
 # Import from standard library
 import logging
+import random
 
 logging.basicConfig(format="\n%(asctime)s\n%(message)s", level=logging.INFO, force=True)
 
@@ -60,7 +61,7 @@ if "generate_error" not in st.session_state:
 
 st.title("Generate Tweets")
 st.markdown("This mini-app generates Tweets using OpenAI's GPT-3 based Davinci [model](https://beta.openai.com/docs/models/overview). You can find the code on [GitHub](https://github.com/kinosal/tweet) and the author on [Twitter](https://twitter.com/kinosal).")
-topic = st.text_input(label="Topic", placeholder="AI")
+topic = st.text_input(label="Topic (or hashtag)", placeholder="AI")
 mood = st.text_input(
     label="Mood (e.g. inspirational, funny, serious) (optional)",
     placeholder="inspirational",
@@ -69,16 +70,29 @@ style = st.text_input(
     label="Twitter account handle to style-copy recent Tweets (optional)",
     placeholder="elonmusk",
 )
-st.button(
-    label="Generate",
-    type="primary",
-    on_click=generate,
-    args=(topic, mood, style),
-)
+col1, col2 = st.columns([4, 1])
+with col1:
+    st.button(
+        label="Generate",
+        type="primary",
+        on_click=generate,
+        args=(topic, mood, style),
+    )
+with col2:
+    with open("moods.txt") as f:
+        moods = f.read().splitlines()
+    topic = "an interesting topic"
+    mood = random.choice(moods)
+    st.button(
+        label="Feeling lucky",
+        type="secondary",
+        on_click=generate,
+        args=(topic, mood, ""),
+    )
 if st.session_state.tweet:
     st.markdown("""---""")
     st.text_area(label="Tweet", value=st.session_state.tweet, height=100)
-    col1, col2 = st.columns([5, 1])
+    col1, col2 = st.columns([4, 1])
     with col1:
         components.html(
             f"""
