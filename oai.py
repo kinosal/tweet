@@ -56,3 +56,20 @@ class Openai:
         except Exception as e:
             st.error(f"OpenAI API error: {e}")
             return ""
+
+    @staticmethod
+    def image(prompt: str) -> str:
+        """Call OpenAI Image Create with text prompt.
+        Args:
+            prompt: text prompt
+        Return: image url
+        """
+        try:
+            response = openai.Image.create(
+                prompt=prompt, n=1, size="512x512", response_format="url",
+            )
+            return response["data"][0]["url"]
+
+        except Exception as e:
+            st.error(f"OpenAI API error: {e}")
+            return ""

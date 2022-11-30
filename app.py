@@ -16,10 +16,11 @@ import oai
 
 
 # Define functions
-def generate(topic, mood="", style=""):
-    """Generate Tweets."""
-    with placeholder:
-        with st.spinner("Please wait while your Tweet is being generated.."):
+def generate_text(topic: str, mood: str = "", style: str = ""):
+    """Generate Tweet text."""
+    st.session_state.image = ""
+    with text_placeholder:
+        with st.spinner("Please wait while your Tweet is being generated..."):
             if not topic:
                 st.session_state.spinner = ""
                 st.session_state.error = "Please enter a topic"
@@ -59,6 +60,21 @@ def generate(topic, mood="", style=""):
                 )
 
 
+def generate_image(prompt: str):
+    """Generate Tweet image."""
+    with image_placeholder:
+        with st.spinner("Please wait while your image is being generated..."):
+            openai = oai.Openai()
+            flagged = openai.moderate(prompt)
+            if flagged:
+                logging.info(f"Prompt: '{prompt}' flaggged")
+                st.session_state.spinner = ""
+                st.session_state.error = "Inappropriate prompt"
+                return
+
+            st.session_state.image = openai.image(prompt)
+
+
 # Render Streamlit page
 st.set_page_config(page_title="Tweet", page_icon="🤖")
 if "tweet" not in st.session_state:
@@ -67,15 +83,16 @@ if "error" not in st.session_state:
     st.session_state.error = ""
 if "feeling_lucky" not in st.session_state:
     st.session_state.feeling_lucky = False
+if "image" not in st.session_state:
+    st.session_state.image = ""
 
 st.title("Generate Tweets")
 st.markdown(
-    "This mini-app generates Tweets using OpenAI's GPT-3 based Davinci [model](https://beta.openai.com/docs/models/overview). You can find the code on [GitHub](https://github.com/kinosal/tweet) and the author on [Twitter](https://twitter.com/kinosal)."
+    "This mini-app generates Tweets using OpenAI's GPT-3 based [Davinci model](https://beta.openai.com/docs/models/overview) for texts and [DALL·E](https://beta.openai.com/docs/guides/images) for images. You can find the code on [GitHub](https://github.com/kinosal/tweet) and the author on [Twitter](https://twitter.com/kinosal)."
 )
 
 if st.session_state.error:
     st.error(st.session_state.error)
-placeholder = st.empty()
 
 topic = st.text_input(label="Topic (or hashtag)", placeholder="AI")
 mood = st.text_input(
@@ -89,9 +106,9 @@ style = st.text_input(
 col1, col2 = st.columns([4, 1])
 with col1:
     st.session_state.feeling_lucky = not st.button(
-        label="Generate",
+        label="Generate text",
         type="primary",
-        on_click=generate,
+        on_click=generate_text,
         args=(topic, mood, style),
     )
 with col2:
@@ -100,9 +117,11 @@ with col2:
     st.session_state.feeling_lucky = st.button(
         label="Feeling lucky",
         type="secondary",
-        on_click=generate,
+        on_click=generate_text,
         args=("an interesting topic", random.choice(sample_moods), ""),
     )
+
+text_placeholder = st.empty()
 
 if st.session_state.tweet:
     st.markdown("""---""")
@@ -118,18 +137,41 @@ if st.session_state.tweet:
     with col2:
         if st.session_state.feeling_lucky:
             st.button(
-                label="Regenerate",
+                label="Regenerate text",
                 type="secondary",
-                on_click=generate,
+                on_click=generate_text,
                 args=("an interesting topic", random.choice(sample_moods), ""),
             )
         else:
             st.button(
-                label="Regenerate",
+                label="Regenerate text",
                 type="secondary",
-                on_click=generate,
+                on_click=generate_text,
                 args=(topic, mood, style),
             )
+
+    if not st.session_state.image:
+        st.button(
+            label="Generate image",
+            type="primary",
+            on_click=generate_image,
+            args=[st.session_state.tweet],
+        )
+    else:
+        col1, col2 = st.columns([2, 3])
+        with col1:
+            st.image(st.session_state.image, width=256)
+        with col2:
+            st.write("Image URL:")
+            st.caption(st.session_state.image)
+        st.button(
+            label="Regenerate image",
+            type="secondary",
+            on_click=generate_image,
+            args=[st.session_state.tweet],
+        )
+    
+    image_placeholder = st.empty()
 
     st.markdown("""---""")
     st.markdown("**Other Streamlit apps by [@kinosal](https://twitter.com/kinosal)**")
