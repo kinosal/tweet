@@ -35,12 +35,20 @@ else:
 
 if topic:
     openai = oai.Openai()
-    print(prompt)
-    tweet = openai.call(prompt=prompt).strip().replace('"', "")
-    print(tweet)
-    st.text_area(label="Tweet", value=tweet, height=100)
-    components.html(
-        f"""
-            <a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-size="large" data-text="{tweet}\n - Tweet generated via" data-url="https://tweets.streamlit.app" data-show-count="false">Tweet</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-        """
-    )
+    print(f"\nTopic: {topic}")
+    if mood:
+        print(f"Mood: {mood}")
+    if style:
+        print(f"Style: {style}")
+    flagged = openai.moderate(prompt)
+    if flagged:
+        st.error("Inappropriate input.")
+    else:
+        tweet = openai.complete(prompt).strip().replace('"', "")
+        print(f"Tweet: {tweet}")
+        st.text_area(label="Tweet", value=tweet, height=100)
+        components.html(
+            f"""
+                <a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-size="large" data-text="{tweet}\n - Tweet generated via" data-url="https://tweets.streamlit.app" data-show-count="false">Tweet</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+            """
+        )

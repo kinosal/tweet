@@ -15,8 +15,18 @@ class Openai:
     """OpenAI Connector."""
 
     @staticmethod
-    def call(prompt: str) -> str:
-        """Call OpenAI GPT with text prompt.
+    def moderate(prompt: str) -> bool:
+        """Call OpenAI GPT Moderation with text prompt.
+        Args:
+            prompt: text prompt
+        Return: boolean if flagged
+        """
+        response = openai.Moderation.create(prompt)
+        return response["results"][0]["flagged"]
+
+    @staticmethod
+    def complete(prompt: str) -> str:
+        """Call OpenAI GPT Completion with text prompt.
         Args:
             prompt: text prompt
         Return: predicted response text
