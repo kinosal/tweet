@@ -17,38 +17,38 @@ import oai
 # Define functions
 def generate(topic, mood="", style=""):
     """Generate Tweets."""
+    with st.spinner("Please wait while your Tweet is being generated..."):
+        if not topic:
+            st.session_state.generate_error = "Please enter a topic"
+            return
 
-    if not topic:
-        st.session_state.generate_error = "Please enter a topic"
-        return
+        mood_prompt = f"{mood} " if mood else ""
+        if style:
+            twitter = twe.Tweets(account=style)
+            tweets = twitter.fetch_tweets()
+            tweets_prompt = "\n\n".join(tweets)
+            prompt = (
+                f"Write a {mood_prompt}Tweet about {topic} in less than 120 characters "
+                f"and in the style of the following Tweets:\n\n{tweets_prompt}\n"
+            )
+        else:
+            prompt = f"Write a {mood_prompt}Tweet about {topic} in less than 120 characters:\n"
 
-    mood_prompt = f"{mood} " if mood else ""
-    if style:
-        twitter = twe.Tweets(account=style)
-        tweets = twitter.fetch_tweets()
-        tweets_prompt = "\n\n".join(tweets)
-        prompt = (
-            f"Write a {mood_prompt}Tweet about {topic} in less than 120 characters "
-            f"and in the style of the following Tweets:\n\n{tweets_prompt}\n"
-        )
-    else:
-        prompt = f"Write a {mood_prompt}Tweet about {topic} in less than 120 characters:\n"
+        openai = oai.Openai()
+        flagged = openai.moderate(prompt)
+        mood_output = f", Mood: {mood}" if mood else ""
+        style_output = f", Style: {style}" if style else ""
+        if flagged:
+            logging.info(f"Topic: {topic}{mood_output}{style_output}\nflaggged")
+            st.session_state.generate_error = "Inappropriate input"
+            return
 
-    openai = oai.Openai()
-    flagged = openai.moderate(prompt)
-    mood_output = f", Mood: {mood}" if mood else ""
-    style_output = f", Style: {style}" if style else ""
-    if flagged:
-        logging.info(f"Topic: {topic}{mood_output}{style_output}\nflaggged")
-        st.session_state.generate_error = "Inappropriate input"
-        return
-
-    else:
-        st.session_state.tweet = openai.complete(prompt).strip().replace('"', "")
-        logging.info(
-            f"Topic: {topic}{mood_output}{style_output}\n"
-            f"Tweet: {st.session_state.tweet}"
-        )
+        else:
+            st.session_state.tweet = openai.complete(prompt).strip().replace('"', "")
+            logging.info(
+                f"Topic: {topic}{mood_output}{style_output}\n"
+                f"Tweet: {st.session_state.tweet}"
+            )
 
 
 # Render Streamlit page
@@ -59,8 +59,7 @@ if "generate_error" not in st.session_state:
     st.session_state.generate_error = ""
 
 st.title("Generate Tweets")
-st.write("This mini-app generates Tweets using OpenAI's GPT-3 based Davinci model.")
-st.markdown("You can find the code on [GitHub](https://github.com/kinosal/tweet).")
+st.markdown("This mini-app generates Tweets using OpenAI's GPT-3 based Davinci [model](https://beta.openai.com/docs/models/overview). You can find the code on [GitHub](https://github.com/kinosal/tweet) and the author on [Twitter](https://twitter.com/kinosal).")
 topic = st.text_input(label="Topic", placeholder="AI")
 mood = st.text_input(
     label="Mood (e.g. inspirational, funny, serious) (optional)",
@@ -94,5 +93,15 @@ if st.session_state.tweet:
             on_click=generate,
             args=(topic, mood, style),
         )
+    st.markdown("""---""")
+    st.markdown("**Other Streamlit apps by [@kinosal](https://twitter.com/kinosal)**")
+    col1, col2, col3 = st.columns([1, 1, 1])
+    with col1:
+        st.markdown("[Summarize Web Content](https://web-summarizer.streamlit.app)")
+    with col2:
+        st.markdown("[Translate English to Code](https://english-to-code.streamlit.app)")
+    with col3:
+        st.markdown("[Analyze PDFs](https://pdf-keywords.streamlit.app)")
+
 elif st.session_state.generate_error:
     st.error(st.session_state.generate_error)
