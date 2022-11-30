@@ -34,7 +34,7 @@ class Openai:
             return ""
 
     @staticmethod
-    def complete(prompt: str) -> str:
+    def complete(prompt: str, temperature: float = 0.9, max_tokens: int = 50) -> str:
         """Call OpenAI GPT Completion with text prompt.
         Args:
             prompt: text prompt
@@ -43,8 +43,8 @@ class Openai:
         kwargs = {
             "engine": "text-davinci-003",
             "prompt": prompt,
-            "temperature": 0.9,
-            "max_tokens": 50,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
             "top_p": 1,
             "frequency_penalty": 0,
             "presence_penalty": 0,
@@ -66,7 +66,10 @@ class Openai:
         """
         try:
             response = openai.Image.create(
-                prompt=prompt, n=1, size="512x512", response_format="url",
+                prompt=prompt,
+                n=1,
+                size="512x512",
+                response_format="url",
             )
             return response["data"][0]["url"]
 

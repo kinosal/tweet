@@ -3,6 +3,7 @@
 # Import from standard library
 import logging
 import random
+import re
 
 logging.basicConfig(format="\n%(asctime)s\n%(message)s", level=logging.INFO, force=True)
 
@@ -22,7 +23,6 @@ def generate_text(topic: str, mood: str = "", style: str = ""):
     with text_placeholder:
         with st.spinner("Please wait while your Tweet is being generated..."):
             if not topic:
-                st.session_state.spinner = ""
                 st.session_state.error = "Please enter a topic"
                 return
 
@@ -33,10 +33,10 @@ def generate_text(topic: str, mood: str = "", style: str = ""):
                 tweets_prompt = "\n\n".join(tweets)
                 prompt = (
                     f"Write a {mood_prompt}Tweet about {topic} in less than 120 characters "
-                    f"and in the style of the following Tweets:\n\n{tweets_prompt}\n"
+                    f"and in the style of the following Tweets:\n\n{tweets_prompt}\n\n"
                 )
             else:
-                prompt = f"Write a {mood_prompt}Tweet about {topic} in less than 120 characters:\n"
+                prompt = f"Write a {mood_prompt}Tweet about {topic} in less than 120 characters:\n\n"
 
             openai = oai.Openai()
             flagged = openai.moderate(prompt)
@@ -44,12 +44,10 @@ def generate_text(topic: str, mood: str = "", style: str = ""):
             style_output = f", Style: {style}" if style else ""
             if flagged:
                 logging.info(f"Topic: {topic}{mood_output}{style_output}\nflaggged")
-                st.session_state.spinner = ""
                 st.session_state.error = "Inappropriate input"
                 return
 
             else:
-                st.session_state.spinner = ""
                 st.session_state.error = ""
                 st.session_state.tweet = (
                     openai.complete(prompt).strip().replace('"', "")
@@ -65,14 +63,22 @@ def generate_image(prompt: str):
     with image_placeholder:
         with st.spinner("Please wait while your image is being generated..."):
             openai = oai.Openai()
-            flagged = openai.moderate(prompt)
-            if flagged:
-                logging.info(f"Prompt: '{prompt}' flaggged")
-                st.session_state.spinner = ""
-                st.session_state.error = "Inappropriate prompt"
-                return
-
-            st.session_state.image = openai.image(prompt)
+            prompt_wo_hashtags = re.sub("#[A-Za-z0-9_]+", "", prompt)
+            processing_prompt = (
+                "Create a detailed but brief description of an image that captures "
+                f"the essence of the following text:\n{prompt_wo_hashtags}\n\n"
+            )
+            processed_prompt = (
+                openai.complete(
+                    prompt=processing_prompt, temperature=0.5, max_tokens=40
+                )
+                .strip()
+                .replace('"', "")
+                .split(".")[0]
+                + "."
+            )
+            logging.info(f"Tweet: {prompt}\n" f"Image prompt: {processed_prompt}")
+            st.session_state.image = openai.image(processed_prompt)
 
 
 # Render Streamlit page
@@ -170,7 +176,7 @@ if st.session_state.tweet:
             on_click=generate_image,
             args=[st.session_state.tweet],
         )
-    
+
     image_placeholder = st.empty()
 
     st.markdown("""---""")
