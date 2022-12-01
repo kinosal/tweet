@@ -19,13 +19,16 @@ import oai
 # Define functions
 def generate_text(topic: str, mood: str = "", style: str = ""):
     """Generate Tweet text."""
+    st.session_state.tweet = ""
     st.session_state.image = ""
-    with text_placeholder:
-        with st.spinner("Please wait while your Tweet is being generated..."):
-            if not topic:
-                st.session_state.error = "Please enter a topic"
-                return
+    st.session_state.text_error = ""
 
+    if not topic:
+        st.session_state.text_error = "Please enter a topic"
+        return
+
+    with text_spinner_placeholder:
+        with st.spinner("Please wait while your Tweet is being generated..."):
             mood_prompt = f"{mood} " if mood else ""
             if style:
                 twitter = twe.Tweets(account=style)
@@ -43,12 +46,11 @@ def generate_text(topic: str, mood: str = "", style: str = ""):
             mood_output = f", Mood: {mood}" if mood else ""
             style_output = f", Style: {style}" if style else ""
             if flagged:
-                logging.info(f"Topic: {topic}{mood_output}{style_output}\nflaggged")
-                st.session_state.error = "Inappropriate input"
+                logging.info(f"Topic: {topic}{mood_output}{style_output}\n")
                 return
 
             else:
-                st.session_state.error = ""
+                st.session_state.text_error = ""
                 st.session_state.tweet = (
                     openai.complete(prompt).strip().replace('"', "")
                 )
@@ -60,7 +62,7 @@ def generate_text(topic: str, mood: str = "", style: str = ""):
 
 def generate_image(prompt: str):
     """Generate Tweet image."""
-    with image_placeholder:
+    with image_spinner_placeholder:
         with st.spinner("Please wait while your image is being generated..."):
             openai = oai.Openai()
             prompt_wo_hashtags = re.sub("#[A-Za-z0-9_]+", "", prompt)
@@ -85,20 +87,19 @@ def generate_image(prompt: str):
 st.set_page_config(page_title="Tweet", page_icon="🤖")
 if "tweet" not in st.session_state:
     st.session_state.tweet = ""
-if "error" not in st.session_state:
-    st.session_state.error = ""
-if "feeling_lucky" not in st.session_state:
-    st.session_state.feeling_lucky = False
 if "image" not in st.session_state:
     st.session_state.image = ""
+if "text_error" not in st.session_state:
+    st.session_state.text_error = ""
+if "image_error" not in st.session_state:
+    st.session_state.image_error = ""
+if "feeling_lucky" not in st.session_state:
+    st.session_state.feeling_lucky = False
 
 st.title("Generate Tweets")
 st.markdown(
     "This mini-app generates Tweets using OpenAI's GPT-3 based [Davinci model](https://beta.openai.com/docs/models/overview) for texts and [DALL·E](https://beta.openai.com/docs/guides/images) for images. You can find the code on [GitHub](https://github.com/kinosal/tweet) and the author on [Twitter](https://twitter.com/kinosal)."
 )
-
-if st.session_state.error:
-    st.error(st.session_state.error)
 
 topic = st.text_input(label="Topic (or hashtag)", placeholder="AI")
 mood = st.text_input(
@@ -127,7 +128,9 @@ with col2:
         args=("an interesting topic", random.choice(sample_moods), ""),
     )
 
-text_placeholder = st.empty()
+text_spinner_placeholder = st.empty()
+if st.session_state.text_error:
+    st.error(st.session_state.text_error)
 
 if st.session_state.tweet:
     st.markdown("""---""")
@@ -177,7 +180,9 @@ if st.session_state.tweet:
             args=[st.session_state.tweet],
         )
 
-    image_placeholder = st.empty()
+    image_spinner_placeholder = st.empty()
+    if st.session_state.image_error:
+        st.error(st.session_state.image_error)
 
     st.markdown("""---""")
     st.markdown("**Other Streamlit apps by [@kinosal](https://twitter.com/kinosal)**")

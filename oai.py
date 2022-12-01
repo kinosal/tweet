@@ -10,9 +10,12 @@ import streamlit as st
 
 # Assign credentials from environment variable or streamlit secrets dict
 openai.api_key = os.getenv("OPENAI_API_KEY") or st.secrets["OPENAI_API_KEY"]
+openai
 
 # Suppress openai request/response logging
-logging.getLogger("openai").setLevel(logging.WARNING)
+# Handled by manually changing the respective APIRequestor methods in the openai package
+# Alternatively (also affects other log messages):
+# logging.getLogger("openai").setLevel(logging.WARNING)
 
 
 class Openai:
@@ -30,7 +33,8 @@ class Openai:
             return response["results"][0]["flagged"]
 
         except Exception as e:
-            st.error(f"OpenAI API error: {e}")
+            logging.error(f"OpenAI API error: {e}")
+            st.session_state.text_error = f"OpenAI API error: {e}"
             return ""
 
     @staticmethod
@@ -54,7 +58,8 @@ class Openai:
             return response["choices"][0]["text"]
 
         except Exception as e:
-            st.error(f"OpenAI API error: {e}")
+            logging.error(f"OpenAI API error: {e}")
+            st.session_state.text_error = f"OpenAI API error: {e}"
             return ""
 
     @staticmethod
@@ -74,5 +79,6 @@ class Openai:
             return response["data"][0]["url"]
 
         except Exception as e:
-            st.error(f"OpenAI API error: {e}")
+            logging.error(f"OpenAI API error: {e}")
+            st.session_state.image_error = f"OpenAI API error: {e}"
             return ""
