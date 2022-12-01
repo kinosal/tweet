@@ -110,7 +110,18 @@ style = st.text_input(
     label="Twitter account handle to style-copy recent Tweets (optional)",
     placeholder="elonmusk",
 )
-col1, col2 = st.columns([4, 1])
+# Force responsive layout for columns also on mobile
+st.write(
+    '''<style>
+    [data-testid="column"] {
+        width: calc(50% - 1rem);
+        flex: 1 1 calc(50% - 1rem);
+        min-width: calc(50% - 1rem);
+    }
+    </style>''',
+    unsafe_allow_html=True
+)
+col1, col2 = st.columns(2)
 with col1:
     st.session_state.feeling_lucky = not st.button(
         label="Generate text",
@@ -135,7 +146,7 @@ if st.session_state.text_error:
 if st.session_state.tweet:
     st.markdown("""---""")
     st.text_area(label="Tweet", value=st.session_state.tweet, height=100)
-    col1, col2 = st.columns([4, 1])
+    col1, col2 = st.columns(2)
     with col1:
         components.html(
             f"""
@@ -167,12 +178,7 @@ if st.session_state.tweet:
             args=[st.session_state.tweet],
         )
     else:
-        col1, col2 = st.columns([2, 3])
-        with col1:
-            st.image(st.session_state.image, width=256)
-        with col2:
-            st.write("Image URL:")
-            st.caption(st.session_state.image)
+        st.image(st.session_state.image)
         st.button(
             label="Regenerate image",
             type="secondary",
@@ -186,12 +192,12 @@ if st.session_state.tweet:
 
     st.markdown("""---""")
     st.markdown("**Other Streamlit apps by [@kinosal](https://twitter.com/kinosal)**")
-    col1, col2, col3 = st.columns([1, 1, 1])
+    col1, col2, col3 = st.columns(3)
     with col1:
-        st.markdown("[Summarize Web Content](https://web-summarizer.streamlit.app)")
+        st.markdown("[Content Summarizer](https://web-summarizer.streamlit.app)")
     with col2:
         st.markdown(
-            "[Translate English to Code](https://english-to-code.streamlit.app)"
+            "[Code Translator](https://english-to-code.streamlit.app)"
         )
     with col3:
-        st.markdown("[Analyze PDFs](https://pdf-keywords.streamlit.app)")
+        st.markdown("[PDF Analyzer](https://pdf-keywords.streamlit.app)")
