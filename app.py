@@ -19,6 +19,12 @@ import oai
 # Define functions
 def generate_text(topic: str, mood: str = "", style: str = ""):
     """Generate Tweet text."""
+    if st.session_state.n_requests >= 5:
+        st.session_state.text_error = "Too many requests. Please wait a few seconds before generating another Tweet."
+        logging.info(f"Session request limit reached: {st.session_state.n_requests}")
+        st.session_state.n_requests = 1
+        return
+
     st.session_state.tweet = ""
     st.session_state.image = ""
     st.session_state.text_error = ""
@@ -51,6 +57,7 @@ def generate_text(topic: str, mood: str = "", style: str = ""):
 
             else:
                 st.session_state.text_error = ""
+                st.session_state.n_requests += 1
                 st.session_state.tweet = (
                     openai.complete(prompt).strip().replace('"', "")
                 )
@@ -62,6 +69,12 @@ def generate_text(topic: str, mood: str = "", style: str = ""):
 
 def generate_image(prompt: str):
     """Generate Tweet image."""
+    if st.session_state.n_requests >= 5:
+        st.session_state.text_error = "Too many requests. Please wait a few seconds before generating another text or image."
+        logging.info(f"Session request limit reached: {st.session_state.n_requests}")
+        st.session_state.n_requests = 1
+        return
+
     with image_spinner_placeholder:
         with st.spinner("Please wait while your image is being generated..."):
             openai = oai.Openai()
@@ -79,8 +92,9 @@ def generate_image(prompt: str):
                 .split(".")[0]
                 + "."
             )
-            logging.info(f"Tweet: {prompt}\n" f"Image prompt: {processed_prompt}")
+            st.session_state.n_requests += 1
             st.session_state.image = openai.image(processed_prompt)
+            logging.info(f"Tweet: {prompt}\n" f"Image prompt: {processed_prompt}")
 
 
 # Render Streamlit page
@@ -95,6 +109,8 @@ if "image_error" not in st.session_state:
     st.session_state.image_error = ""
 if "feeling_lucky" not in st.session_state:
     st.session_state.feeling_lucky = False
+if "n_requests" not in st.session_state:
+    st.session_state.n_requests = 0
 
 st.title("Generate Tweets")
 st.markdown(
@@ -112,14 +128,14 @@ style = st.text_input(
 )
 # Force responsive layout for columns also on mobile
 st.write(
-    '''<style>
+    """<style>
     [data-testid="column"] {
         width: calc(50% - 1rem);
         flex: 1 1 calc(50% - 1rem);
         min-width: calc(50% - 1rem);
     }
-    </style>''',
-    unsafe_allow_html=True
+    </style>""",
+    unsafe_allow_html=True,
 )
 col1, col2 = st.columns(2)
 with col1:
@@ -196,8 +212,6 @@ if st.session_state.tweet:
     with col1:
         st.markdown("[Content Summarizer](https://web-summarizer.streamlit.app)")
     with col2:
-        st.markdown(
-            "[Code Translator](https://english-to-code.streamlit.app)"
-        )
+        st.markdown("[Code Translator](https://english-to-code.streamlit.app)")
     with col3:
         st.markdown("[PDF Analyzer](https://pdf-keywords.streamlit.app)")
