@@ -5,8 +5,6 @@ import logging
 import random
 import re
 
-logging.basicConfig(format="\n%(asctime)s\n%(message)s", level=logging.INFO, force=True)
-
 # Import from 3rd party libraries
 import streamlit as st
 import streamlit.components.v1 as components
@@ -14,6 +12,9 @@ import streamlit.components.v1 as components
 # Import modules
 import tweets as twe
 import oai
+
+# Configure logger
+logging.basicConfig(format="\n%(asctime)s\n%(message)s", level=logging.INFO, force=True)
 
 
 # Define functions
@@ -94,7 +95,7 @@ def generate_image(prompt: str):
             )
             st.session_state.n_requests += 1
             st.session_state.image = openai.image(processed_prompt)
-            logging.info(f"Tweet: {prompt}\n" f"Image prompt: {processed_prompt}")
+            logging.info(f"Tweet: {prompt}\nImage prompt: {processed_prompt}")
 
 
 # Render Streamlit page

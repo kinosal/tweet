@@ -32,7 +32,7 @@ class Tweets:
         try:
             tweets = self.api.user_timeline(
                 screen_name=self.account,
-                tweet_mode="extended",
+                tweet_mode="extended",  # returns full text
                 count=50,
                 exclude_replies=True,
                 include_rts=False,

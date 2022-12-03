@@ -14,7 +14,7 @@ openai.api_key = os.getenv("OPENAI_API_KEY") or st.secrets["OPENAI_API_KEY"]
 # Suppress openai request/response logging
 # Handle by manually changing the respective APIRequestor methods in the openai package
 # Does not work hosted on Streamlit since all packages are re-installed by Poetry
-# Alternatively (affect all messages from this logger):
+# Alternatively (affects all messages from this logger):
 logging.getLogger("openai").setLevel(logging.WARNING)
 
 
@@ -49,9 +49,9 @@ class Openai:
             "prompt": prompt,
             "temperature": temperature,
             "max_tokens": max_tokens,
-            "top_p": 1,
-            "frequency_penalty": 0,
-            "presence_penalty": 0,
+            "top_p": 1,  # default
+            "frequency_penalty": 0,  # default,
+            "presence_penalty": 0,  # default
         }
         try:
             response = openai.Completion.create(**kwargs)
