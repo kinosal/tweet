@@ -53,6 +53,7 @@ def generate_text(topic: str, mood: str = "", style: str = ""):
             mood_output = f", Mood: {mood}" if mood else ""
             style_output = f", Style: {style}" if style else ""
             if flagged:
+                st.session_state.text_error = "Input flagged as inappropriate."
                 logging.info(f"Topic: {topic}{mood_output}{style_output}\n")
                 return
 

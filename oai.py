@@ -35,7 +35,6 @@ class Openai:
         except Exception as e:
             logging.error(f"OpenAI API error: {e}")
             st.session_state.text_error = f"OpenAI API error: {e}"
-            return ""
 
     @staticmethod
     def complete(prompt: str, temperature: float = 0.9, max_tokens: int = 50) -> str:
@@ -60,7 +59,6 @@ class Openai:
         except Exception as e:
             logging.error(f"OpenAI API error: {e}")
             st.session_state.text_error = f"OpenAI API error: {e}"
-            return ""
 
     @staticmethod
     def image(prompt: str) -> str:
@@ -81,4 +79,3 @@ class Openai:
         except Exception as e:
             logging.error(f"OpenAI API error: {e}")
             st.session_state.image_error = f"OpenAI API error: {e}"
-            return ""
