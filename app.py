@@ -99,8 +99,9 @@ def generate_image(prompt: str):
             logging.info(f"Tweet: {prompt}\nImage prompt: {processed_prompt}")
 
 
-# Render Streamlit page
+# Configure Streamlit page and state
 st.set_page_config(page_title="Tweet", page_icon="🤖")
+
 if "tweet" not in st.session_state:
     st.session_state.tweet = ""
 if "image" not in st.session_state:
@@ -114,6 +115,19 @@ if "feeling_lucky" not in st.session_state:
 if "n_requests" not in st.session_state:
     st.session_state.n_requests = 0
 
+# Force responsive layout for columns also on mobile
+st.write(
+    """<style>
+    [data-testid="column"] {
+        width: calc(50% - 1rem);
+        flex: 1 1 calc(50% - 1rem);
+        min-width: calc(50% - 1rem);
+    }
+    </style>""",
+    unsafe_allow_html=True,
+)
+
+# Render Streamlit page
 st.title("Generate Tweets")
 st.markdown(
     "This mini-app generates Tweets using OpenAI's GPT-3 based [Davinci model](https://beta.openai.com/docs/models/overview) for texts and [DALL·E](https://beta.openai.com/docs/guides/images) for images. You can find the code on [GitHub](https://github.com/kinosal/tweet) and the author on [Twitter](https://twitter.com/kinosal)."
@@ -127,17 +141,6 @@ mood = st.text_input(
 style = st.text_input(
     label="Twitter account handle to style-copy recent Tweets (optional)",
     placeholder="elonmusk",
-)
-# Force responsive layout for columns also on mobile
-st.write(
-    """<style>
-    [data-testid="column"] {
-        width: calc(50% - 1rem);
-        flex: 1 1 calc(50% - 1rem);
-        min-width: calc(50% - 1rem);
-    }
-    </style>""",
-    unsafe_allow_html=True,
 )
 col1, col2 = st.columns(2)
 with col1:
@@ -214,6 +217,7 @@ if st.session_state.tweet:
         st.markdown(
             "**Other Streamlit apps by [@kinosal](https://twitter.com/kinosal)**"
         )
+        st.markdown("[Twitter Wrapped](https://twitter-likes.streamlit.app)")
         st.markdown("[Content Summarizer](https://web-summarizer.streamlit.app)")
         st.markdown("[Code Translator](https://english-to-code.streamlit.app)")
         st.markdown("[PDF Analyzer](https://pdf-keywords.streamlit.app)")
