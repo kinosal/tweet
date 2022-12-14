@@ -324,7 +324,7 @@ python-versions = "*"
 
 [[package]]
 name = "pathspec"
-version = "0.10.2"
+version = "0.10.3"
 description = "Utility library for gitignore style pattern matching of file paths."
 category = "dev"
 optional = false
@@ -714,7 +714,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "flake8 (<5)", "pytest-co
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "138f0d170f27abc8fcbfe8995b4e0d42a4afe76f7ad2e28454169adefb7fe57f"
+content-hash = "3dfb04196a613020990fdf7c8ddd475ca22247ac3d727eb032ed99b32f5bcce7"
 
 [metadata.files]
 altair = []
