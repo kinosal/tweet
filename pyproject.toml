@@ -9,7 +9,7 @@ python = "^3.10"
 numpy = "^1.18"
 tweepy = "^4.12"
 streamlit = "^1.15"
-openai = "^0.25"
+openai = "^0.27"
 
 [tool.poetry.dev-dependencies]
 black = "^22.10"
