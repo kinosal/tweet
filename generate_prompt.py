@@ -7,6 +7,7 @@ openai.api_key = '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'
 model_id = "gpt-3.5-turbo"
 IG = 'instagram'
 
+
 def get_information(info):
     """
     get the informative data from Do and Don't
