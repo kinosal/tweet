@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "tweet"
+name = "linqia"
 version = "0.1.0"
 description = ""
 authors = ["Nikolas Schriefer <info@nikolasschriefer.de>"]

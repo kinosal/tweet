@@ -27,7 +27,7 @@ $ pip install poetry
 # install dependencies
 $ poetry install 
 ```
-#### Local Dev
+### Local Dev
 ```
 # please pass in env variables before run below command
 $ streamlit run app.py
