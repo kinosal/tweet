@@ -18,7 +18,7 @@ logging.basicConfig(format="\n%(asctime)s\n%(message)s", level=logging.INFO, for
 
 
 # Define functions
-def generate_text(topic: str, mood: str = "", style: str = ""):
+def generate_text(topic: str):
     """Generate Tweet text."""
     if st.session_state.n_requests >= 5:
         st.session_state.text_error = "Too many requests. Please wait a few seconds before generating another Tweet."
@@ -36,25 +36,13 @@ def generate_text(topic: str, mood: str = "", style: str = ""):
 
     with text_spinner_placeholder:
         with st.spinner("Please wait while your Tweet is being generated..."):
-            mood_prompt = f"{mood} " if mood else ""
-            if style:
-                twitter = twe.Tweets(account=style)
-                tweets = twitter.fetch_tweets()
-                tweets_prompt = "\n\n".join(tweets)
-                prompt = (
-                    f"Write a {mood_prompt}Tweet about {topic} in less than 120 characters "
-                    f"and in the style of the following Tweets:\n\n{tweets_prompt}\n\n"
-                )
-            else:
-                prompt = f"Write a {mood_prompt}Tweet about {topic} in less than 120 characters:\n\n"
 
+            prompt = f"Write a post on social media about {topic} in less than 120 characters:\n\n"
             openai = oai.Openai()
             flagged = openai.moderate(prompt)
-            mood_output = f", Mood: {mood}" if mood else ""
-            style_output = f", Style: {style}" if style else ""
             if flagged:
                 st.session_state.text_error = "Input flagged as inappropriate."
-                logging.info(f"Topic: {topic}{mood_output}{style_output}\n")
+                logging.info(f"Topic: {topic}\n")
                 return
 
             else:
@@ -64,7 +52,7 @@ def generate_text(topic: str, mood: str = "", style: str = ""):
                     openai.complete(prompt).strip().replace('"', "")
                 )
                 logging.info(
-                    f"Topic: {topic}{mood_output}{style_output}\n"
+                    f"Topic: {topic}\n"
                     f"Tweet: {st.session_state.tweet}"
                 )
 
@@ -115,49 +103,26 @@ if "feeling_lucky" not in st.session_state:
 if "n_requests" not in st.session_state:
     st.session_state.n_requests = 0
 
-# Force responsive layout for columns also on mobile
-st.write(
-    """<style>
-    [data-testid="column"] {
-        width: calc(50% - 1rem);
-        flex: 1 1 calc(50% - 1rem);
-        min-width: calc(50% - 1rem);
-    }
-    </style>""",
-    unsafe_allow_html=True,
-)
+# render logo
+col1, col2, col3 = st.columns(3)
+with col1:
+    st.write(' ')
+with col2:
+    st.image("./assets/hack.jpg")
+with col3:
+    st.write(' ')
 
 # Render Streamlit page
 st.title("Generate Tweets")
-st.markdown(
-    "This mini-app generates Tweets using OpenAI's GPT-3 based [Davinci model](https://beta.openai.com/docs/models/overview) for texts and [DALL·E](https://beta.openai.com/docs/guides/images) for images. You can find the code on [GitHub](https://github.com/kinosal/tweet) and the author on [Twitter](https://twitter.com/kinosal)."
-)
 
 topic = st.text_input(label="Topic (or hashtag)", placeholder="AI")
-mood = st.text_input(
-    label="Mood (e.g. inspirational, funny, serious) (optional)",
-    placeholder="inspirational",
-)
-style = st.text_input(
-    label="Twitter account handle to style-copy recent Tweets (optional)",
-    placeholder="elonmusk",
-)
-col1, col2 = st.columns(2)
+col1, = st.columns(1)
 with col1:
     st.session_state.feeling_lucky = not st.button(
         label="Generate text",
         type="primary",
         on_click=generate_text,
-        args=(topic, mood, style),
-    )
-with col2:
-    with open("moods.txt") as f:
-        sample_moods = f.read().splitlines()
-    st.session_state.feeling_lucky = st.button(
-        label="Feeling lucky",
-        type="secondary",
-        on_click=generate_text,
-        args=("an interesting topic", random.choice(sample_moods), ""),
+        args=(topic,),
     )
 
 text_spinner_placeholder = st.empty()
@@ -166,30 +131,7 @@ if st.session_state.text_error:
 
 if st.session_state.tweet:
     st.markdown("""---""")
-    st.text_area(label="Tweet", value=st.session_state.tweet, height=100)
-    col1, col2 = st.columns(2)
-    with col1:
-        components.html(
-            f"""
-                <a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-size="large" data-text="{st.session_state.tweet}\n - Tweet generated via" data-url="https://tweets.streamlit.app" data-show-count="false">Tweet</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-            """,
-            height=45,
-        )
-    with col2:
-        if st.session_state.feeling_lucky:
-            st.button(
-                label="Regenerate text",
-                type="secondary",
-                on_click=generate_text,
-                args=("an interesting topic", random.choice(sample_moods), ""),
-            )
-        else:
-            st.button(
-                label="Regenerate text",
-                type="secondary",
-                on_click=generate_text,
-                args=(topic, mood, style),
-            )
+    st.text_area(label="Post", value=st.session_state.tweet, height=100)
 
     if not st.session_state.image:
         st.button(
@@ -212,25 +154,3 @@ if st.session_state.tweet:
         st.error(st.session_state.image_error)
 
     st.markdown("""---""")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown(
-            "**Other Streamlit apps by [@kinosal](https://twitter.com/kinosal)**"
-        )
-        st.markdown("[Twitter Wrapped](https://twitter-likes.streamlit.app)")
-        st.markdown("[Content Summarizer](https://web-summarizer.streamlit.app)")
-        st.markdown("[Code Translator](https://english-to-code.streamlit.app)")
-        st.markdown("[PDF Analyzer](https://pdf-keywords.streamlit.app)")
-    with col2:
-        st.write("If you like this app, please consider to")
-        components.html(
-            """
-                <form action="https://www.paypal.com/donate" method="post" target="_top">
-                <input type="hidden" name="hosted_button_id" value="8JJTGY95URQCQ" />
-                <input type="image" src="https://pics.paypal.com/00/s/MDY0MzZhODAtNGI0MC00ZmU5LWI3ODYtZTY5YTcxOTNlMjRm/file.PNG" height="35" border="0" name="submit" title="Donate with PayPal" alt="Donate with PayPal button" />
-                <img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1" />
-                </form>
-            """,
-            height=45,
-        )
-        st.write("so I can keep it alive. Thank you!")
