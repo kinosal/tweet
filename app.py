@@ -49,7 +49,7 @@ def generate_text(topic: str):
                 st.session_state.text_error = ""
                 st.session_state.n_requests += 1
                 st.session_state.tweet = (
-                    openai.complete(prompt).strip().replace('"', "")
+                    openai.complete(prompt, "gpt-3.5-turbo").strip().replace('"', "")
                 )
                 logging.info(
                     f"Topic: {topic}\n"
