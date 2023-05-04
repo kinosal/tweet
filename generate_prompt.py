@@ -3,7 +3,7 @@
 import openai
 import re
 
-openai.api_key = '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'
+openai.api_key = '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'
 model_id = "gpt-3.5-turbo"
 IG = 'instagram'
 
@@ -26,7 +26,9 @@ def generate_prompts(brief, network_type, constraint):
     #          that accurately represents the given the above text and constraints.
     #         '''.format(network_type, brief, constraint)
     prompt = '''
-    Please write a prompt for chatgpt for generating an {} post based on the given this text {} and {} and constraint, NOT POST TEXT
+    I want to get a prompt that starts with "please write a prompt ~" to chatgpt to generate the post text.
+    Please write a prompt for generating an {} post based on the given this text {} and this info {}, 
+    the required hashtags from info must be included and no more than 200 words! 
     '''.format(network_type, brief, constraint)
 
     completion = openai.ChatCompletion.create(model=model_id, messages=[{"role": "user", "content": prompt}])
@@ -34,8 +36,8 @@ def generate_prompts(brief, network_type, constraint):
     return completion["choices"][0]["message"]["content"]
 
 def generate_post_text(input_prompt, network_type, post_type):
-    prompt_for_test_generation = '''Please write realistic post text with emojis for {} {} based on this information {}. 
-    Please make sure that the required hashtags must be in the post text'''.format(network_type, post_type, input_prompt)
+    prompt_for_test_generation = '''Please write realistic {} {} text with required hashtags based on this information {}. 
+    no more than 100 words!'''.format(network_type, post_type, input_prompt)
 
     completion = openai.ChatCompletion.create(model=model_id, messages=[{"role": "user", "content": prompt_for_test_generation}])
 
@@ -82,4 +84,4 @@ if __name__ == "__main__":
     print('#################################################Prompt for chat gpt#######################################')
     print(prompt_result_from_gpt)
     print('#################################################post text#################################################')
-    print(generate_post_text(prompt_result_from_gpt, IG, 'post'))
+    print(generate_post_text('post', IG, prompt_result_from_gpt))
