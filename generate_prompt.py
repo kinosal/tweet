@@ -3,7 +3,7 @@
 import openai
 import re
 
-openai.api_key = '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'
+openai.api_key = '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'
 model_id = "gpt-3.5-turbo"
 IG = 'instagram'
 
@@ -37,7 +37,7 @@ def generate_prompts(brief, network_type, constraint):
     return completion["choices"][0]["message"]["content"]
 
 def generate_post_text(input_prompt, network_type, post_type):
-    prompt_for_test_generation = '''Please write realistic {} {} text with required hashtags based on this information {}. 
+    prompt_for_test_generation = '''Please write realistic {} {} text with required hashtags and emojis based on this information {}. 
     no more than 100 words!'''.format(network_type, post_type, input_prompt)
 
     completion = openai.ChatCompletion.create(model=model_id, messages=[{"role": "user", "content": prompt_for_test_generation}])
