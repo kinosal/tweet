@@ -37,24 +37,37 @@ class Openai:
             st.session_state.text_error = f"OpenAI API error: {e}"
 
     @staticmethod
-    def complete(prompt: str, temperature: float = 0.9, max_tokens: int = 50) -> str:
+    def complete(
+        prompt: str,
+        model: str = "text-davinci-003",
+        temperature: float = 0.9,
+        max_tokens: int = 50,
+    ) -> str:
         """Call OpenAI GPT Completion with text prompt.
         Args:
             prompt: text prompt
+            model: OpenAI model name, e.g. "text-davinci-003" or "gpt-3.5-turbo"
+            temperature: float between 0 and 1
+            max_tokens: int between 1 and 2048
         Return: predicted response text
         """
-        kwargs = {
-            "engine": "text-davinci-003",
-            "prompt": prompt,
-            "temperature": temperature,
-            "max_tokens": max_tokens,
-            "top_p": 1,  # default
-            "frequency_penalty": 0,  # default,
-            "presence_penalty": 0,  # default
-        }
         try:
-            response = openai.Completion.create(**kwargs)
-            return response["choices"][0]["text"]
+            if "text" in model:
+                response = openai.Completion.create(
+                    prompt=prompt,
+                    model=model,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                )
+                return response["choices"][0]["text"]
+            else:
+                response = openai.ChatCompletion.create(
+                    model=model,
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                )
+                return response["choices"][0]["message"]["content"]
 
         except Exception as e:
             logging.error(f"OpenAI API error: {e}")
