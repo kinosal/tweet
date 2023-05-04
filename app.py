@@ -17,44 +17,56 @@ import oai
 logging.basicConfig(format="\n%(asctime)s\n%(message)s", level=logging.INFO, force=True)
 
 
-# Define functions
-def generate_text(topic: str):
-    """Generate Tweet text."""
-    if st.session_state.n_requests >= 5:
-        st.session_state.text_error = "Too many requests. Please wait a few seconds before generating another Tweet."
-        logging.info(f"Session request limit reached: {st.session_state.n_requests}")
-        st.session_state.n_requests = 1
-        return
+def create_image_prompt(product_name: str, visual_features: str, prompt_number=2) -> str:
+    """create prompts for Midjourney
+    Args:
+        product_name (str): name for the content breif
+        visual_features (str): visual features in content brief
+    Returns:
+        str: Description 1... Description 2...
+    """
 
-    st.session_state.tweet = ""
-    st.session_state.image = ""
+    prompt = "I am promoting a product called {}. I need to have these visual features in my pictures: {}. \
+                Can you give me {} example descriptions of images that would fit those visual features? \
+                Please format the response as \"Description 1: ...; Description 2:...\"".format(product_name, visual_features, prompt_number)
+    openai = oai.Openai()
     st.session_state.text_error = ""
+    st.session_state.mood_board = (
+        openai.complete(prompt, "gpt-3.5-turbo", temperature=0.2).strip().replace('"', "")
+    )
+    # logging.info(
+    #     f"Descriptions: {st.session_state.mood_board}"
+    # )
 
-    if not topic:
-        st.session_state.text_error = "Please enter a topic"
+def generate_content_post_prompt(content_brief, network_type, guideline):
+    prompt = '''
+    I want to get a prompt that starts with "please write a prompt ~" to chatgpt to generate the post text.
+    Please write a prompt for generating an {} post based on the given this text {} and this info {}, 
+    the required hashtags from info must be included and no more than 200 words! 
+    '''.format(network_type, content_brief, guideline)
+
+    openai = oai.Openai()
+    st.session_state.text_error = ""
+    st.session_state.content_post = (
+        openai.complete(prompt, "gpt-3.5-turbo").strip().replace('"', "")
+    )
+    # logging.info(
+    #     f"Prompts Descriptions: {st.session_state.content_post}"
+    # )
+
+
+def generate_post_text(content_post, network_type):
+    if network_type == "":
+        st.session_state.text_error = "Please enter a network_type"
         return
 
-    with text_spinner_placeholder:
-        with st.spinner("Please wait while your Tweet is being generated..."):
-
-            prompt = f"Write a post on social media about {topic} in less than 120 characters:\n\n"
-            openai = oai.Openai()
-            flagged = openai.moderate(prompt)
-            if flagged:
-                st.session_state.text_error = "Input flagged as inappropriate."
-                logging.info(f"Topic: {topic}\n")
-                return
-
-            else:
-                st.session_state.text_error = ""
-                st.session_state.n_requests += 1
-                st.session_state.tweet = (
-                    openai.complete(prompt, "gpt-3.5-turbo").strip().replace('"', "")
-                )
-                logging.info(
-                    f"Topic: {topic}\n"
-                    f"Tweet: {st.session_state.tweet}"
-                )
+    prompt = '''Please write realistic {} post text with required hashtags and emojis based on this information {}. 
+        no more than 100 words!'''.format(network_type, content_post)
+    openai = oai.Openai()
+    st.session_state.text_error = ""
+    st.session_state.post_text = (
+        openai.complete(prompt, "gpt-3.5-turbo").strip().replace('"', "")
+    )
 
 
 def generate_image(prompt: str):
@@ -90,8 +102,12 @@ def generate_image(prompt: str):
 # Configure Streamlit page and state
 st.set_page_config(page_title="Tweet", page_icon="🤖")
 
-if "tweet" not in st.session_state:
-    st.session_state.tweet = ""
+if "mood_board" not in st.session_state:
+    st.session_state.mood_board = ""
+if "content_post" not in st.session_state:
+    st.session_state.content_post = ""
+if "post_text" not in st.session_state:
+    st.session_state.post_text = ""
 if "image" not in st.session_state:
     st.session_state.image = ""
 if "text_error" not in st.session_state:
@@ -100,6 +116,8 @@ if "image_error" not in st.session_state:
     st.session_state.image_error = ""
 if "feeling_lucky" not in st.session_state:
     st.session_state.feeling_lucky = False
+if "content_post_btn" not in st.session_state:
+    st.session_state.content_post_btn = False
 if "n_requests" not in st.session_state:
     st.session_state.n_requests = 0
 
@@ -113,44 +131,63 @@ with col3:
     st.write(' ')
 
 # Render Streamlit page
-st.title("Generate Tweets")
-
-topic = st.text_input(label="Topic (or hashtag)", placeholder="AI")
+# Mood Board
+st.title("Generate Mood Board Prompts")
+product_name = st.text_input(label="Product Name")
+campaign_overview = st.text_area(label="Campaign Overview", height=100)
 col1, = st.columns(1)
 with col1:
     st.session_state.feeling_lucky = not st.button(
-        label="Generate text",
+        label="Generate Mood Board",
         type="primary",
-        on_click=generate_text,
-        args=(topic,),
+        on_click=create_image_prompt,
+        args=(product_name, campaign_overview),
     )
 
-text_spinner_placeholder = st.empty()
-if st.session_state.text_error:
-    st.error(st.session_state.text_error)
-
-if st.session_state.tweet:
+if st.session_state.mood_board:
     st.markdown("""---""")
-    st.text_area(label="Post", value=st.session_state.tweet, height=100)
-
-    if not st.session_state.image:
-        st.button(
-            label="Generate image",
-            type="primary",
-            on_click=generate_image,
-            args=[st.session_state.tweet],
-        )
-    else:
-        st.image(st.session_state.image)
-        st.button(
-            label="Regenerate image",
-            type="secondary",
-            on_click=generate_image,
-            args=[st.session_state.tweet],
-        )
+    st.text_area(label="Mood Board", value=st.session_state.mood_board, height=150)
 
     image_spinner_placeholder = st.empty()
     if st.session_state.image_error:
         st.error(st.session_state.image_error)
 
     st.markdown("""---""")
+
+# Content Post
+st.title("Generate Content Post Prompts")
+network_type = st.text_input(label="Network Type")
+content_brief = st.text_area(label="Content Brief", height=100)
+guideline = st.text_area(label="Guideline", height=100)
+col1, = st.columns(1)
+with col1:
+    st.session_state.content_post_btn    = not st.button(
+        label="Generate Content Post",
+        type="primary",
+        on_click=generate_content_post_prompt,
+        args=(content_brief, network_type, guideline),
+    )
+
+if st.session_state.content_post:
+    st.markdown("""---""")
+    st.text_area(label="Content Post", value=st.session_state.content_post, height=150)
+
+# Post Text
+if st.session_state.content_post:
+    st.title("Generate Post Text Prompts")
+    col1, = st.columns(1)
+    with col1:
+        st.session_state.feeling_lucky = not st.button(
+            label="Generate Post Text",
+            type="primary",
+            on_click=generate_post_text,
+            args=(st.session_state.content_post, network_type),
+        )
+
+    if st.session_state.post_text:
+        st.markdown("""---""")
+        st.text_area(label="Post Text", value=st.session_state.post_text, height=150)
+
+text_spinner_placeholder = st.empty()
+if st.session_state.text_error:
+    st.error(st.session_state.text_error)
