@@ -8,6 +8,7 @@ import re
 # Import from 3rd party libraries
 import streamlit as st
 import streamlit.components.v1 as components
+import streamlit_analytics
 
 # Import modules
 import tweets as twe
@@ -60,6 +61,7 @@ def generate_text(topic: str, mood: str = "", style: str = ""):
             else:
                 st.session_state.text_error = ""
                 st.session_state.n_requests += 1
+                streamlit_analytics.start_tracking()
                 st.session_state.tweet = (
                     openai.complete(prompt, "gpt-3.5-turbo").strip().replace('"', "")
                 )
@@ -67,7 +69,6 @@ def generate_text(topic: str, mood: str = "", style: str = ""):
                     f"Topic: {topic}{mood_output}{style_output}\n"
                     f"Tweet: {st.session_state.tweet}"
                 )
-
 
 def generate_image(prompt: str):
     """Generate Tweet image."""
@@ -128,6 +129,7 @@ st.write(
 )
 
 # Render Streamlit page
+streamlit_analytics.start_tracking()
 st.title("Generate Tweets")
 st.markdown(
     "This mini-app generates Tweets using OpenAI's GPT-3 based [Davinci model](https://beta.openai.com/docs/models/overview) for texts and [DALL·E](https://beta.openai.com/docs/guides/images) for images. You can find the code on [GitHub](https://github.com/kinosal/tweet) and the author on [Twitter](https://twitter.com/kinosal)."
@@ -234,3 +236,5 @@ if st.session_state.tweet:
             height=45,
         )
         st.write("so I can keep it alive. Thank you!")
+
+streamlit_analytics.stop_tracking()
