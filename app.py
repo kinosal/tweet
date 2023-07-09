@@ -132,7 +132,7 @@ st.write(
 streamlit_analytics.start_tracking()
 st.title("Generate Tweets")
 st.markdown(
-    "This mini-app generates Tweets using OpenAI's GPT-3 based [Davinci model](https://beta.openai.com/docs/models/overview) for texts and [DALL·E](https://beta.openai.com/docs/guides/images) for images. You can find the code on [GitHub](https://github.com/kinosal/tweet) and the author on [Twitter](https://twitter.com/kinosal)."
+    "This mini-app generates Tweets using OpenAI's [GPTs](https://beta.openai.com/docs/models/overview) for texts and [DALL·E](https://beta.openai.com/docs/guides/images) for images. You can find the code on [GitHub](https://github.com/kinosal/tweet) and the author on [Twitter](https://twitter.com/kinosal)."
 )
 
 topic = st.text_input(label="Topic (or hashtag)", placeholder="AI")
@@ -141,7 +141,7 @@ mood = st.text_input(
     placeholder="inspirational",
 )
 style = st.text_input(
-    label="Twitter account handle to style-copy recent Tweets (optional)",
+    label="Twitter account handle to style-copy recent Tweets (optional, limited by Twitter's API)",
     placeholder="elonmusk",
 )
 col1, col2 = st.columns(2)
