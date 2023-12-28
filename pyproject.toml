@@ -9,11 +9,11 @@ python = "^3.10"
 numpy = "^1.18"
 tweepy = "^4.12"
 streamlit = "^1.15"
-openai = "^0.27"
+openai = "^1.6"
 streamlit-analytics = "^0.4"
 
 [tool.poetry.dev-dependencies]
-black = "^22.10"
+black = "^23.12"
 pycodestyle = "^2.10"
 
 [build-system]

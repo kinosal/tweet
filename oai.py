@@ -8,8 +8,9 @@ import logging
 import openai
 import streamlit as st
 
-# Assign credentials from environment variable or streamlit secrets dict
-openai.api_key = os.getenv("OPENAI_API_KEY") or st.secrets["OPENAI_API_KEY"]
+# Instantiate OpenAI with credentials from environment or streamlit secrets
+openai_key = os.getenv("OPENAI_API_KEY") or st.secrets["OPENAI_API_KEY"]
+client = openai.OpenAI(api_key=openai_key)
 
 # Suppress openai request/response logging
 # Handle by manually changing the respective APIRequestor methods in the openai package
@@ -29,8 +30,8 @@ class Openai:
         Return: boolean if flagged
         """
         try:
-            response = openai.Moderation.create(prompt)
-            return response["results"][0]["flagged"]
+            response = client.moderations.create(input=prompt)
+            return response.results[0].flagged
 
         except Exception as e:
             logging.error(f"OpenAI API error: {e}")
@@ -39,35 +40,26 @@ class Openai:
     @staticmethod
     def complete(
         prompt: str,
-        model: str = "text-davinci-003",
+        model: str = "gpt-3.5-turbo",
         temperature: float = 0.9,
         max_tokens: int = 50,
     ) -> str:
         """Call OpenAI GPT Completion with text prompt.
         Args:
             prompt: text prompt
-            model: OpenAI model name, e.g. "text-davinci-003" or "gpt-3.5-turbo"
+            model: OpenAI model name, e.g. "gpt-3.5-turbo"
             temperature: float between 0 and 1
             max_tokens: int between 1 and 2048
         Return: predicted response text
         """
         try:
-            if "text" in model:
-                response = openai.Completion.create(
-                    prompt=prompt,
-                    model=model,
-                    temperature=temperature,
-                    max_tokens=max_tokens,
-                )
-                return response["choices"][0]["text"]
-            else:
-                response = openai.ChatCompletion.create(
-                    model=model,
-                    messages=[{"role": "user", "content": prompt}],
-                    temperature=temperature,
-                    max_tokens=max_tokens,
-                )
-                return response["choices"][0]["message"]["content"]
+            response = client.chat.completions.create(
+                model=model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+            return response.choices[0].message.content
 
         except Exception as e:
             logging.error(f"OpenAI API error: {e}")
@@ -81,13 +73,14 @@ class Openai:
         Return: image url
         """
         try:
-            response = openai.Image.create(
+            response = client.images.generate(
                 prompt=prompt,
+                model="dall-e-3",
+                quality="standard",
                 n=1,
-                size="512x512",
-                response_format="url",
+                size="1024x1024",
             )
-            return response["data"][0]["url"]
+            return response.data[0].url
 
         except Exception as e:
             logging.error(f"OpenAI API error: {e}")
